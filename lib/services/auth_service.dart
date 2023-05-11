@@ -1,65 +1,68 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:pawprints/models/operator_model.dart';
+import 'package:pawprints/models/pets_model.dart';
+import '../models/adresses_model.dart';
+import '../services/auth_service.dart';
+import 'adresses_model.dart';
 
-class UserModel{
-  final String uid;
-  final String email;
-  UserModel({required this.uid, required this.email});
-}
-abstract class AuthBase {
-  Stream<UserModel?> get onAuthStateChanged;
-  Future<UserModel?> currentUser();
-  Future<UserModel?> signInWithEmailAndPassword(String email, String password);
-  Future<UserModel?> createUserWithEmailAndPassword(
-      String email, String password);
-  Future<void> signOut();
-}
-class AuthService implements AuthBase{
-  final _firebaseAuth = FirebaseAuth.instance;
+class PetOwner {
+  int? id;
+  OperatorModel? user;
+  String? fullname;
+  String? profilePhoto;
+  String? password;
+  String? phoneNumber;
+  String? mail;
+  DateTime? birthDate;
+  DateTime? createdDate;
+  Address? address;
+  List<Pet>? pets;
 
-  // <#1>
-  UserModel? _userFromFirebase(User? user) {
-    if (user == null) {
-      return null;
-    }
-    return UserModel(uid: user.uid, email: user.email!);
+  PetOwner({
+    required this.id,
+    required this.user,
+    required this.fullname,
+    required this.profilePhoto,
+    required this.password,
+    required this.phoneNumber,
+    required this.mail,
+    required this.birthDate,
+    required this.createdDate,
+    required this.address,
+    required this.pets,
+  });
+
+  factory PetOwner.fromJson(Map<String, dynamic> json) {
+    return PetOwner(
+      id: json['id'],
+      user: OperatorModel.fromJson(json['user']),
+      fullname: json['fullname'],
+      profilePhoto: json['profile_photo'],
+      password: json['password_'],
+      phoneNumber: json['phone_number'],
+      mail: json['mail'],
+      birthDate: DateTime.parse(json['birth_date']),
+      createdDate: DateTime.parse(json['created_date']),
+      address: Address.fromJson(json['address']),
+      pets: (json['pets'] as List<dynamic>)
+          .map((petJson) => Pet.fromJson(petJson))
+          .toList(),
+    );
   }
 
-  // <#2>
-  @override
-  Stream<UserModel?> get onAuthStateChanged {
-    return _firebaseAuth.authStateChanges().map(_userFromFirebase);
-  }
-
-  // <#3>
-  @override
-  Future<UserModel?> currentUser() async {
-    final user = _firebaseAuth.currentUser;
-    return _userFromFirebase(user);
-  }
-
-  // <#4>
-  @override
-  Future<UserModel?> signInWithEmailAndPassword(
-      String email, String password) async {
-    final authResult = await _firebaseAuth.signInWithEmailAndPassword(
-        email: email, password: password);
-
-    return _userFromFirebase(authResult.user);
-  }
-
-  // <#5>
-  @override
-  Future<UserModel?> createUserWithEmailAndPassword(
-      String email, String password) async {
-    final authResult = await _firebaseAuth.createUserWithEmailAndPassword(
-        email: email, password: password);
-
-    return _userFromFirebase(authResult.user);
-  }
-
-  // <#6>
-  @override
-  Future<void> signOut() async {
-    return await _firebaseAuth.signOut();
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'user': user?.toJson(),
+      'fullname': fullname,
+      'profile_photo': profilePhoto,
+      'password_': password,
+      'phone_number': phoneNumber,
+      'mail': mail,
+      'birth_date': birthDate?.toIso8601String(),
+      'created_date': createdDate?.toIso8601String(),
+      'address': address?.toJson(),
+      'pets': pets?.map((pet) => pet.toJson()).toList(),
+    };
   }
 }
